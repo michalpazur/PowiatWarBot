@@ -5,7 +5,7 @@ powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
 with open('map-data/neighbours.json', 'r') as neighbours_file:
     neighbours = json.load(neighbours_file)
 
-for i in range(1000):
+for i in range(2500):
     can_poceed = False
 
     while not can_poceed:
@@ -15,17 +15,21 @@ for i in range(1000):
         conquering_powiat_row = powiaty[powiaty['code'] == random_powiat_belongs_to]
         conquering_powiat_code = conquering_powiat_row['code'].iloc[0]
         conquering_powiat_value = conquering_powiat_row['value'].iloc[0]
-        conquering_powiat_name = conquering_powiat_row['name'].iloc[0]
 
         powiat_to_conquer_code = random.choice(neighbours[random_powiat_code])
         powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
-        powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0]
-        powiat_to_conquer_belongs_to = powiat_to_conquer_row['belongs_to'].iloc[0]
-        can_poceed = (powiat_to_conquer_belongs_to != conquering_powiat_code)
+        powiat_to_conquer_belongs_to_code = powiat_to_conquer_row['belongs_to'].iloc[0]
+        can_poceed = (powiat_to_conquer_belongs_to_code != conquering_powiat_code)
         
+    conquering_powiat_name = conquering_powiat_row['name'].iloc[0]
+    powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0]
+    powiat_to_conquer_belongs_to_row = powiaty[powiaty['code'] == powiat_to_conquer_belongs_to_code]
+    powiat_to_conquer_belongs_to_name = powiat_to_conquer_belongs_to_row['name'].iloc[0]
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = random_powiat_belongs_to
     powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
-    print('{} podbija {}'.format(conquering_powiat_name, powiat_to_conquer_name))
+    print('{} podbija {} należący do {}'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_belongs_to_name))
+    if (powiaty[powiaty['belongs_to'] == powiat_to_conquer_belongs_to_code].empty):
+        print('🦀🦀🦀 {} is gone 🦀🦀🦀'.format(powiat_to_conquer_belongs_to_name))
 
 cmap = plt.get_cmap('tab20')
 fig, ax = plt.subplots(figsize = (8,8))
