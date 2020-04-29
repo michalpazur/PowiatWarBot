@@ -7,7 +7,7 @@ powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
 with open('map-data/neighbours.json', 'r') as neighbours_file:
     neighbours = json.load(neighbours_file)
 
-for i in range(500):
+for i in range(2):
     can_proceed = False
 
     while not can_proceed:
@@ -26,10 +26,10 @@ for i in range(500):
         #get a powiat to conquer from the list of neighbors
         powiat_to_conquer_code = random.choice(neighbours[random_powiat_code])
         powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
-        powiat_to_conquer_belongs_to_code = powiat_to_conquer_row['belongs_to'].iloc[0]
+        powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
     
         #powiat can only be conquered if it doesn't belong to conquering powiat
-        can_proceed = (powiat_to_conquer_belongs_to_code != conquering_powiat_code)
+        can_proceed = (powiat_to_conquer_owner_code != conquering_powiat_code)
     
     conquering_powiat_name = conquering_powiat_row['name'].iloc[0]
     powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0]
@@ -40,7 +40,7 @@ for i in range(500):
     conquering_powiat_row['geometry'].iloc[0] = conquering_powiat_geometry
 
     #find row for conquered powiat owner
-    powiat_to_conquer_owner_row = powiaty[powiaty['code'] == powiat_to_conquer_belongs_to_code]
+    powiat_to_conquer_owner_row = powiaty[powiaty['code'] == powiat_to_conquer_owner_code]
     powiat_to_conquer_owner_name = powiat_to_conquer_owner_row['name'].iloc[0]
     powiat_to_conquer_owner_value = powiat_to_conquer_owner_row['value'].iloc[0]
 
@@ -48,10 +48,12 @@ for i in range(500):
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_code
     powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
 
-    print('{} podbija {} należący do {}'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name))
-
+    if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
+        print('{} podbija {} należący do {}.'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name))
+    else:
+        print('{} podbija {}.'.format(conquering_powiat_name, powiat_to_conquer_name))
     #find all rows for conquered powiat owner and merge geometry
-    all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_belongs_to_code]
+    all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_owner_code]
     powiat_to_conquer_owner_geometry = all_rows_for_powiat_to_conquer_owner['geometry'].unary_union
     powiat_to_conquer_owner_row['geometry'].iloc[0] = powiat_to_conquer_owner_geometry
 
@@ -59,7 +61,7 @@ for i in range(500):
         print('🦀 {} is gone 🦀'.format(powiat_to_conquer_owner_name))
 
 cmap = plt.get_cmap('tab20')
-fig, ax = plt.subplots(figsize = (8,8))
+fig, ax = plt.subplots(figsize = (10,10))
 ax.set_axis_off()
 ax.set_aspect('equal')
 
@@ -68,8 +70,13 @@ for i in range(len(powiaty)):
     row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
     
 conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 2)
+plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y, fontdict = {'fontsize': 8}, horizontalalignment = 'center')
 powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'red', hatch = '///', linewidth = 2)
-powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 2)
+plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y, fontdict = {'fontsize': 8}, horizontalalignment = 'center')
+
+if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
+    powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 2)
+    plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row.geometry.centroid.x, y = powiat_to_conquer_owner_row.geometry.centroid.y, fontdict = {'fontsize': 8}, horizontalalignment = 'center')
 
 contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 9)
 plt.show(ax)
