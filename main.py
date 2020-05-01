@@ -83,7 +83,7 @@ fig, ax = plt.subplots(figsize = (12,12))
 #get bbox for the detailed map
 conquering_powiat_row.plot(ax = ax)
 powiat_to_conquer_row.plot(ax = ax)
-if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
+if (not all_rows_for_powiat_to_conquer_owner.empty):
     powiat_to_conquer_owner_row.plot(ax = ax)
 
 x_limit = ax.get_xlim()
@@ -118,7 +118,7 @@ else:
 conquering_text.set_path_effects(path_effects)
 to_conquer_text.set_path_effects(path_effects)
 
-if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
+if (not all_rows_for_powiat_to_conquer_owner.empty):
     powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 2)
     to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row.geometry.centroid.x, y = powiat_to_conquer_owner_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
     to_conquer_owner_text.set_path_effects(path_effects)
@@ -126,6 +126,15 @@ if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
 
 contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 9)
 plt.savefig('overall-map.png', transparent = True)
+
+#change few details for the detailed map
+conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
+conquering_text.set_fontsize(20)
+to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
+to_conquer_text.set_fontsize(20)
+
+if (not all_rows_for_powiat_to_conquer_owner.empty):
+    to_conquer_owner_text.set_fontsize(20)
 
 #set bbox for detailed map
 ax.set_xlim(x_limit)
