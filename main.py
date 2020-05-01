@@ -10,7 +10,7 @@ with open('map-data/neighbours.json', 'r') as neighbours_file:
 
 powiaty_left = len(powiaty) #TODO: read number of powiats left from file
 
-for i in range(2000):
+for i in range(100):
     can_proceed = False
 
     #find a random powiat, it's owner will be conquering
@@ -70,6 +70,8 @@ for i in range(2000):
     if (all_rows_for_powiat_to_conquer_owner.empty):
         print('🦀 {} is gone 🦀'.format(powiat_to_conquer_owner_name))
         powiaty_left -= 1
+    
+    print('{}: {} powiaty left.'.format(i, powiaty_left))
 
 #=== Plotting both maps ===
 
@@ -93,16 +95,22 @@ ax.set_aspect('equal')
 #every powiat has to get plotted separately, otherwise it would have a color from a normalized color map
 for i in range(len(powiaty)):
     row = powiaty.loc[[i],]
-    row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
+    row_code = row['code'].iloc[0]
+    row_belongs_to = row['belongs_to'].iloc[0]
+
+    if (not powiaty[powiaty['belongs_to'] == row_code].empty):
+        all_rows_for_this_powiat_geometry = powiaty['geometry'][powiaty['belongs_to'] == row_code].unary_union
+        row['geometry'].iloc[0] = all_rows_for_this_powiat_geometry
+        row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
 
 conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 2)
 powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'red', hatch = '///', linewidth = 2)
 
 #draw text
 height_difference = abs(conquering_powiat_geometry.centroid.y - powiat_to_conquer_row.iloc[0].geometry.centroid.y)
-if (height_difference < 10000):
-    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - 5000,fontdict = font_dict, horizontalalignment = 'center')
-    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + 5000, fontdict = font_dict, horizontalalignment = 'center')
+if (height_difference < 20000):
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - (15000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + (15000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
 else:
     conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
     to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
@@ -119,15 +127,7 @@ if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
 contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 9)
 plt.savefig('overall-map.png', transparent = True)
 
-#change some details for the detailed map
-conquering_text.set_fontsize(48)
-conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
-to_conquer_text.set_fontsize(48)
-to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
-
-if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
-    to_conquer_owner_text.set_fontsize(48)
-
+#set bbox for detailed map
 ax.set_xlim(x_limit)
 ax.set_ylim(y_limit)
 plt.savefig('detail-map.png', transparent = True)
