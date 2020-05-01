@@ -1,5 +1,6 @@
 import json, geopandas, pandas, random, contextily, re
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as patheffects
 
 pandas.set_option('mode.chained_assignment', None)
 
@@ -64,10 +65,11 @@ for i in range(3):
 #=== Plotting both maps ===
 
 cmap = plt.get_cmap('tab20')
-font_dict = {'fontfamily': 'Arial', 'fontsize': 12, 'fontweight': 'bold', 'fontstyle': 'oblique'}
+font_dict = {'fontfamily': 'Arial', 'fontsize': 14, 'fontweight': 'bold', 'fontstyle': 'oblique', 'color': 'white'}
+path_effects = [patheffects.Stroke(linewidth=2, foreground='black'), patheffects.Normal()]
 fig, ax = plt.subplots(figsize = (12,12))
 
-#find bbox for the detailed map
+#get bbox for the detailed map
 conquering_powiat_row.plot(ax = ax)
 powiat_to_conquer_row.plot(ax = ax)
 if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
@@ -85,23 +87,37 @@ for i in range(len(powiaty)):
     row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
 
 conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 2)
-conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - 10000, fontdict = font_dict, horizontalalignment = 'center')
 powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'red', hatch = '///', linewidth = 2)
-to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + 10000, fontdict = font_dict, horizontalalignment = 'center')
+
+#draw text
+height_difference = abs(conquering_powiat_geometry.centroid.y - powiat_to_conquer_row.iloc[0].geometry.centroid.y)
+if (height_difference < 10000):
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - 5000,fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + 5000, fontdict = font_dict, horizontalalignment = 'center')
+else:
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
+
+conquering_text.set_path_effects(path_effects)
+to_conquer_text.set_path_effects(path_effects)
 
 if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
     powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 2)
-    to_conquer_text_owner = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row.geometry.centroid.x, y = powiat_to_conquer_owner_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row.geometry.centroid.x, y = powiat_to_conquer_owner_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_owner_text.set_path_effects(path_effects)
+
 
 contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 9)
 plt.savefig('overall-map.png', transparent = True)
 
 #change some details for the detailed map
-conquering_text.set_fontsize(32)
-to_conquer_text.set_fontsize(32)
+conquering_text.set_fontsize(48)
+conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
+to_conquer_text.set_fontsize(48)
+to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
 
 if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
-    to_conquer_text_owner.set_fontsize(32)
+    to_conquer_owner_text.set_fontsize(48)
 
 ax.set_xlim(x_limit)
 ax.set_ylim(y_limit)

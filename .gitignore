@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # saved .png files with maps
-.png
+*.png
