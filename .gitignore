@@ -130,3 +130,6 @@ dmypy.json
 
 # saved .png files with maps
 *.png
+
+# folder with my Facebook pictures
+fb/
