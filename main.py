@@ -109,8 +109,8 @@ powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value),
 #draw text
 height_difference = abs(conquering_powiat_geometry.centroid.y - powiat_to_conquer_row.iloc[0].geometry.centroid.y)
 if (height_difference < 20000):
-    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - (15000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
-    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + (15000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y - (20000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y + (20000 - height_difference), fontdict = font_dict, horizontalalignment = 'center')
 else:
     conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row.geometry.centroid.x, y = conquering_powiat_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
     to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row.geometry.centroid.x, y = powiat_to_conquer_row.geometry.centroid.y, fontdict = font_dict, horizontalalignment = 'center')
