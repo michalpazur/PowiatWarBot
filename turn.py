@@ -62,9 +62,10 @@ def play_turn():
     #update values for conquered powiat
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_code
     powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
+    conquering_powiat_name[0] = conquering_powiat_name[0].capitalize()
 
     if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
-        message = '{} conquers {} belongig to {}.'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name)
+        message = '{} conquers {} belonging to {}.'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name)
         print(message)
     else:
         message = '{} conquers {}.'.format(conquering_powiat_name, powiat_to_conquer_name)
