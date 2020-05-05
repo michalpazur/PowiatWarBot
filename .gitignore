@@ -136,3 +136,6 @@ fb/
 
 #Visual Studio Code files
 .vscode/
+
+#duh
+api-key.txt
