@@ -4,51 +4,57 @@ import matplotlib.patheffects as patheffects
 import matplotlib as matplotlib
 from adjustText import adjust_text
 
-matplotlib.rcParams['hatch.linewidth'] = 4
-pandas.set_option('mode.chained_assignment', None)
+def play_turn():
+    matplotlib.rcParams['hatch.linewidth'] = 3
+    pandas.set_option('mode.chained_assignment', None)
 
-powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
-with open('map-data/neighbours.json', 'r') as neighbours_file:
-    neighbours = json.load(neighbours_file)
+    powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
+    print(len(powiaty))
+    powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
+    print('{} shapes'.format(len(powiaty_shapes)))
+    powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)
+    print(len(powiaty))
+    powiaty = powiaty.drop(columns = 'code_y')
+    powiaty = powiaty.rename(columns = {'code_x': 'code', 'geometry_x': 'geometry', 'geometry_y': 'powiat_shape'})
+    powiaty = powiaty.set_geometry('geometry')
 
-powiaty_left = len(powiaty) #TODO: read number of powiats left from file
+    with open('map-data/status.txt', 'r') as f:
+        powiaty_left = int(f.readline())
+        last_powiat = f.readline()
 
-for i in range(100):
-    can_proceed = False
-
-    #find a random powiat, it's owner will be conquering
+    #find a random powiat, its owner will be conquering
     #a powiat conquering previously has a 40% chance of being chosen for sure
-    if i == 0 or random.random() < 0.6:
+    if last_powiat == '0' or random.random() < 0.6:
         random_powiat_row = powiaty.loc[[random.choice(powiaty.index)]]
     else:
+        all_rows_for_conquering_powiat = powiaty[powiaty['belongs_to'] == last_powiat]
         random_powiat_row = all_rows_for_conquering_powiat.loc[[random.choice(all_rows_for_conquering_powiat.index)]]
+        print('!!!')
 
     random_powiat_code = random_powiat_row['code'].iloc[0]
     random_powiat_belongs_to = random_powiat_row['belongs_to'].iloc[0]
     conquering_powiat_row = powiaty[powiaty['code'] == random_powiat_belongs_to]
     conquering_powiat_code = conquering_powiat_row['code'].iloc[0]
     conquering_powiat_value = conquering_powiat_row['value'].iloc[0]
+    conquering_powiat_geometry = conquering_powiat_row['geometry'].iloc[0]
 
     all_rows_for_conquering_powiat = powiaty[powiaty['belongs_to'] == conquering_powiat_code]
+    neighbours = []
+    for index, row in powiaty.iterrows():
+        if (row['belongs_to'] != conquering_powiat_code):
+            if (row['powiat_shape'].touches(conquering_powiat_geometry)):
+                neighbours.append(row['code'])
 
-    powiat_neighbours = []
-    for index, row in all_rows_for_conquering_powiat.iterrows():
-        powiat_neighbours.extend(neighbours[row['code']])
+    powiat_to_conquer_code = random.choice(neighbours)
+    powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
+    powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
 
-    while not can_proceed:
-        #get a powiat to conquer from the list of neighbors
-        powiat_to_conquer_code = random.choice(powiat_neighbours)
-        powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
-        powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
-    
-        #powiat can only be conquered if it doesn't belong to conquering powiat
-        can_proceed = (powiat_to_conquer_owner_code != conquering_powiat_code)
-    
     conquering_powiat_name = conquering_powiat_row['name'].iloc[0].lstrip('miasto ')
     powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0].lstrip('miasto ')
 
     #merge geometry for conquering powiat
-    conquering_powiat_geometry = all_rows_for_conquering_powiat['geometry'].unary_union
+    all_rows_for_conquering_powiat = all_rows_for_conquering_powiat.set_geometry('powiat_shape')
+    conquering_powiat_geometry = all_rows_for_conquering_powiat.geometry.unary_union
     conquering_powiat_row['geometry'].iloc[0] = conquering_powiat_geometry
 
     #find row for conquered powiat owner
@@ -67,83 +73,99 @@ for i in range(100):
         
     #find all rows for conquered powiat owner and merge geometry
     all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_owner_code]
-    powiat_to_conquer_owner_geometry = all_rows_for_powiat_to_conquer_owner['geometry'].unary_union
+    all_rows_for_powiat_to_conquer_owner.set_geometry('powiat_shape')
+    powiat_to_conquer_owner_geometry = all_rows_for_powiat_to_conquer_owner.geometry.unary_union
     powiat_to_conquer_owner_row['geometry'].iloc[0] = powiat_to_conquer_owner_geometry
+    print(len(powiaty))
+    powiaty['geometry'][powiaty['code'] == powiat_to_conquer_owner_code] = powiat_to_conquer_owner_geometry
+    print(len(powiaty))
 
     if (all_rows_for_powiat_to_conquer_owner.empty):
         print('🦀 {} is gone 🦀'.format(powiat_to_conquer_owner_name))
         powiaty_left -= 1
-    
-    print('{}: {} powiaty left.'.format(i, powiaty_left))
 
-#=== Plotting both maps ===
+    print('{} powiaty left.'.format(powiaty_left))
 
-cmap = plt.get_cmap('tab20')
-font_dict = {'fontfamily': 'Arial', 'fontsize': 32, 'fontweight': 'bold'}
-path_effects = [patheffects.Stroke(linewidth=4, foreground='black'), patheffects.Normal()]
-texts = []
-fig, ax = plt.subplots(figsize = (20,20))
+    with open('map-data/status.txt', 'w') as f:
+        f.write('{}\n'.format(powiaty_left))
+        f.write(conquering_powiat_code)
 
-#get bbox for the detailed map
-conquering_powiat_row.plot(ax = ax)
-powiat_to_conquer_row.plot(ax = ax)
-if (not all_rows_for_powiat_to_conquer_owner.empty):
-    powiat_to_conquer_owner_row.plot(ax = ax)
+    #=== Plotting both maps ===
 
-x_limit = ax.get_xlim()
-y_limit = ax.get_ylim()
-ax.clear()
-ax.set_axis_off()
-ax.set_aspect('equal')
+    cmap = plt.get_cmap('tab20')
+    font_dict = {'fontfamily': 'Arial', 'fontsize': 32, 'fontweight': 'bold'}
+    path_effects = [patheffects.Stroke(linewidth=4, foreground='black'), patheffects.Normal()]
+    texts = []
+    fig, ax = plt.subplots(figsize = (20,20))
+    powiat_to_conquer = powiat_to_conquer_row.set_geometry('powiat_shape')
+    powiat_to_conquer_owner_row = powiat_to_conquer_owner_row.set_geometry('geometry')
+    conquering_powiat_row = conquering_powiat_row.set_geometry('geometry')
 
-#every powiat has to get plotted separately, otherwise it would have a color from a normalized color map
-for i in range(len(powiaty)):
-    row = powiaty.loc[[i],]
-    row_code = row['code'].iloc[0]
-    row_belongs_to = row['belongs_to'].iloc[0]
+    #get bbox for the detailed map
+    conquering_powiat_row.plot(ax = ax)
+    powiat_to_conquer_row.plot(ax = ax)
+    if (not all_rows_for_powiat_to_conquer_owner.empty):
+        powiat_to_conquer_owner_row.plot(ax = ax)
 
-    if (not powiaty[powiaty['belongs_to'] == row_code].empty):
-        all_rows_for_this_powiat_geometry = powiaty['geometry'][powiaty['belongs_to'] == row_code].unary_union
-        row['geometry'].iloc[0] = all_rows_for_this_powiat_geometry
-        row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
+    x_limit = ax.get_xlim()
+    y_limit = ax.get_ylim()
+    ax.clear()
+    ax.set_axis_off()
+    ax.set_aspect('equal')
 
-conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 3)
-powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = cmap(conquering_powiat_value), hatch = '///')
-powiat_to_conquer_row.plot(ax = ax, color = 'none', edgecolor = 'red', linewidth = 3)
+    #every powiat has to be plotted separately, otherwise it would have a color from a normalized color map
+    for i in range(len(powiaty)):
+        row = powiaty.loc[[i],]
+        row_code = row['code'].iloc[0]
+        row_belongs_to = row['belongs_to'].iloc[0]
 
+        if (not powiaty[powiaty['belongs_to'] == row_code].empty):
+            row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
 
-#draw text
-conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row['geometry'].iloc[0].centroid.x, y = conquering_powiat_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
-to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
+    conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 3)
+    powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = cmap(conquering_powiat_value), hatch = '///')
+    powiat_to_conquer_row.plot(ax = ax, color = 'none', edgecolor = 'red', linewidth = 3)
 
-conquering_text.set_color('#9DFF9C')
-texts.append(conquering_text)
-to_conquer_text.set_color('#FF977A')
-texts.append(to_conquer_text)
+    #draw text
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row['geometry'].iloc[0].centroid.x, y = conquering_powiat_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
 
-if (not all_rows_for_powiat_to_conquer_owner.empty):
-    powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 3)
-    to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
-    to_conquer_owner_text.set_color('#788CFF')
-    texts.append(to_conquer_owner_text)
+    conquering_text.set_color('#9DFF9C')
+    texts.append(conquering_text)
+    to_conquer_text.set_color('#FF977A')
+    texts.append(to_conquer_text)
 
-for text in texts:
-    text.set_path_effects(path_effects)
+    if (not all_rows_for_powiat_to_conquer_owner.empty):
+        powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 3)
+        to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
+        to_conquer_owner_text.set_color('#788CFF')
+        texts.append(to_conquer_owner_text)
 
-adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
-contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
-plt.savefig('overall-map.png', transparent = True)
+    for text in texts:
+        text.set_path_effects(path_effects)
 
-#change few details for the detailed map
-conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
-conquering_text.set_fontsize(40)
-to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
-to_conquer_text.set_fontsize(40)
+    adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
+    #contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
+    plt.savefig('overall-map.png', transparent = True)
 
-if (not all_rows_for_powiat_to_conquer_owner.empty):
-    to_conquer_owner_text.set_fontsize(40)
+    #change few details for the detailed map
+    conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
+    conquering_text.set_fontsize(40)
+    to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
+    to_conquer_text.set_fontsize(40)
 
-#set bbox for detailed map
-ax.set_xlim(x_limit)
-ax.set_ylim(y_limit)
-plt.savefig('detail-map.png', transparent = True)
+    if (not all_rows_for_powiat_to_conquer_owner.empty):
+        to_conquer_owner_text.set_fontsize(40)
+
+    #set bbox for detailed map
+    ax.set_xlim(x_limit)
+    ax.set_ylim(y_limit)
+    plt.savefig('detail-map.png', transparent = True)
+
+    #finally, update geometry for conquering conquered powiat
+    conquering_powiat_geometry = conquering_powiat_geometry.union(powiat_to_conquer_row['powiat_shape'].iloc[0])
+    print(len(powiaty))
+    powiaty['geometry'][powiaty['code'] == conquering_powiat_code] = conquering_powiat_geometry
+    print(len(powiaty))
+    powiaty = powiaty.drop(columns = 'powiat_shape')
+    powiaty.to_file('map-data/powiaty.shp', encoding = 'utf-8')
