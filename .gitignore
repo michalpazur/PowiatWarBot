@@ -133,3 +133,6 @@ dmypy.json
 
 # folder with my Facebook pictures
 fb/
+
+#Visual Studio Code files
+.vscode/
