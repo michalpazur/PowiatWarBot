@@ -9,6 +9,7 @@ def play_turn():
     matplotlib.rcParams['hatch.linewidth'] = 3
     pandas.set_option('mode.chained_assignment', None)
 
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'Septemper', 'October', 'November', 'December']
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
     powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
     powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)
@@ -19,6 +20,11 @@ def play_turn():
     with open('map-data/status.txt', 'r') as f:
         powiaty_left = int(f.readline())
         last_powiat = f.readline().rstrip()
+        date = int(f.readline())
+    
+    month = months[date % 12]
+    year = 1999 + months // 12
+    message = '{} {}'.format(month, year)
 
     #find a random powiat, its owner will be conquering
     #a powiat conquering previously has a 40% chance of being chosen for sure
@@ -63,13 +69,12 @@ def play_turn():
     #update values for conquered powiat
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_code
     powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
-    conquering_powiat_name_info = conquering_powiat_name[0].capitalize() + conquering_powiat_name[1:]
 
     if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
-        message = '{} conquers {} belonging to {}.'.format(conquering_powiat_name_info, powiat_to_conquer_name, powiat_to_conquer_owner_name)
+        message = '{}, {} conquered {} previously occupied by {}.'.format(message, conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name)
         log_info(message)
     else:
-        message = '{} conquers {}.'.format(conquering_powiat_name_info, powiat_to_conquer_name)
+        message = '{}, {} conquered {}.'.format(message, conquering_powiat_name, powiat_to_conquer_name)
         log_info(message)
         
     #find all rows for conquered powiat owner and merge geometry
@@ -170,5 +175,6 @@ def play_turn():
     with open('map-data/status.txt', 'w') as f:
         f.write('{}\n'.format(powiaty_left))
         f.write(conquering_powiat_code)
+        f.write(str(date + 1))
 
     return message, powiaty_left
