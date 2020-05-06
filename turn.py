@@ -23,7 +23,7 @@ def play_turn():
         date = int(f.readline())
     
     month = months[date % 12]
-    year = 1999 + months // 12
+    year = 1999 + date // 12
     message = '{} {}'.format(month, year)
 
     #find a random powiat, its owner will be conquering
@@ -116,12 +116,19 @@ def play_turn():
     ax.clear()
     ax.set_axis_off()
     ax.set_aspect('equal')
+    powiaty_ammount = {}
+    powiaty_names = {}
 
     #every powiat has to be plotted separately, otherwise it would have a color from a normalized color map
     for i in range(len(powiaty)):
         row = powiaty.loc[[i],]
         row_code = row['code'].iloc[0]
+        row_name = row['name'].iloc[0]
         row_belongs_to = row['belongs_to'].iloc[0]
+
+        powiaty_ammount.setdefault(row_belongs_to, 0)
+        powiaty_ammount[row_belongs_to] = powiaty_ammount[row_belongs_to] + 1
+        powiaty_names[row_code] = row_name
 
         if (not powiaty[powiaty['belongs_to'] == row_code].empty):
             row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
@@ -174,7 +181,7 @@ def play_turn():
 
     with open('map-data/status.txt', 'w') as f:
         f.write('{}\n'.format(powiaty_left))
-        f.write(conquering_powiat_code)
+        f.write('{}\n'.format(conquering_powiat_code))
         f.write(str(date + 1))
 
-    return message, powiaty_left
+    return message, powiaty_left, powiaty_ammount, powiaty_names
