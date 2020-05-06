@@ -1,5 +1,7 @@
 from turn import play_turn
 from PIL import Image
+from log import log_info, log_error
+from datetime import datetime
 import facebook
 
 i = 0
@@ -9,7 +11,7 @@ while i < 5:
         i = 10
     except Exception as e:
         i += 1
-        print('An error {} occured, trying again [{}/{}].'.format(e, i, 5))
+        log_error('An error {} occured, trying again [{}/{}].'.format(e, i, 5))
         if (i == 5):
             quit()
 
@@ -36,13 +38,14 @@ while i < 5:
 
         was_posted = True
         post_id = post_response['post_id']
-        image_response = facebook.put_photo(image = open('detailed-map.png', 'rb'), no_story = True, published = False)
+        log_info('Post was created at {} with id {}'.format(datetime.now(), post_id))
+        image_response = facebook.put_photo(image = open('detail-map.png', 'rb'), no_story = True, published = False)
         photo_id = image_response['id']
         facebook.put_object(parent_object = post_id, connection_name = 'comments', attachment_id = photo_id)
 
         i = 10
     except Exception as e:
         i += 1
-        print('An error {} occured, trying again [{}/{}].'.format(e, i, 5))
+        log_error('An error {} occured, trying again [{}/{}].'.format(e, i, 5))
         if (i == 5):
             quit()

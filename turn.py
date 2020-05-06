@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as patheffects
 import matplotlib as matplotlib
 from adjustText import adjust_text
+from log import log_info, log_error
 
 def play_turn():
     matplotlib.rcParams['hatch.linewidth'] = 3
@@ -62,14 +63,14 @@ def play_turn():
     #update values for conquered powiat
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_code
     powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
-    conquering_powiat_name = conquering_powiat_name[0].capitalize() + conquering_powiat_name[1:]
+    conquering_powiat_name_info = conquering_powiat_name[0].capitalize() + conquering_powiat_name[1:]
 
     if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
-        message = '{} conquers {} belonging to {}.'.format(conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name)
-        print(message)
+        message = '{} conquers {} belonging to {}.'.format(conquering_powiat_name_info, powiat_to_conquer_name, powiat_to_conquer_owner_name)
+        log_info(message)
     else:
-        message = '{} conquers {}.'.format(conquering_powiat_name, powiat_to_conquer_name)
-        print(message)
+        message = '{} conquers {}.'.format(conquering_powiat_name_info, powiat_to_conquer_name)
+        log_info(message)
         
     #find all rows for conquered powiat owner and merge geometry
     all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_owner_code]
@@ -82,12 +83,12 @@ def play_turn():
     if (all_rows_for_powiat_to_conquer_owner.empty):
         info = '🦀 {} is gone 🦀'.format(powiat_to_conquer_owner_name)
         message = '{}\n{}'.format(message, info)
-        print(info)
+        log_info(info)
         powiaty_left -= 1
 
     info = '{} powiaty left.'.format(powiaty_left)
     message = '{}\n{}'.format(message, info)
-    print(info)
+    log_info(info)
     #=== Plotting both maps ===
 
     cmap = plt.get_cmap('tab20')
