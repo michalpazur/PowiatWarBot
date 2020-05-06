@@ -51,8 +51,8 @@ while i < 5:
             message = '{}\n{}: {}'.format(message, powiat_name, items_to_sort[j][0])
 
         comment_response = facebook.put_object(parent_object = post_id, message = message, connection_name = 'comments', attachment_id = photo_id)
-	comment_id = comment_response['id']
-	facebook.put_comment(comment_id, 'prawmapopodobnie')
+        comment_id = comment_response['id']
+        facebook.put_comment(comment_id, 'prawmapopodobnie')
 
         i = 10
     except Exception as e:
