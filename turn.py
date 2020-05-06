@@ -123,7 +123,7 @@ def play_turn():
     for i in range(len(powiaty)):
         row = powiaty.loc[[i],]
         row_code = row['code'].iloc[0]
-        row_name = row['name'].iloc[0]
+        row_name = row['name'].iloc[0].lstrip('miasto ')
         row_belongs_to = row['belongs_to'].iloc[0]
 
         powiaty_ammount.setdefault(row_belongs_to, 0)
