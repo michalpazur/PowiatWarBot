@@ -45,12 +45,14 @@ while i < 5:
 
         items_to_sort = [(v, k) for (k, v) in zip(powiaty_ammount.keys(), powiaty_ammount.values())]
         items_to_sort.sort(reverse = True)
-        message = 'Top 10 powiats by number of controlled powiats:'
+        message = 'Top 10 powiaty by number of controlled territories:'
         for j in range(10): 
             powiat_name = powiaty_names[items_to_sort[j][1]]
             message = '{}\n{}: {}'.format(message, powiat_name, items_to_sort[j][0])
 
-        facebook.put_object(parent_object = post_id, message = message, connection_name = 'comments', attachment_id = photo_id)
+        comment_response = facebook.put_object(parent_object = post_id, message = message, connection_name = 'comments', attachment_id = photo_id)
+	comment_id = comment_response['id']
+	facebook.put_comment(comment_id, 'prawmapopodobnie')
 
         i = 10
     except Exception as e:
