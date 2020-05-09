@@ -2,7 +2,7 @@
 [PowiatWarBot](https://www.facebook.com/powiatwarbot/) is a Facebook bot inspired by [WorldWarBot 2020](https://www.facebook.com/worldwarbot/). This time around a civil war broke out in a peaceful nation of Poland.
 
 ## Requirements
-PowiatWarBot is a Python bot made made with Python 3 in mind (damn Unicode strings). While it uses a few of additional packages, you can get them quite easily.
+PowiatWarBot is a Python bot made made with Python 3 in mind. While it uses a few additional packages, you can get them quite easily.
 
 * **[geopandas](https://geopandas.org/)** for reading and handling data in .shp files `pip3 install geopandas`
 * **[matplotlib](https://matplotlib.org/)** for plotting data from GeoDataFrames `pip3 install matplotlib`
