@@ -40,6 +40,7 @@ def play_turn():
     conquering_powiat_code = conquering_powiat_row['code'].iloc[0]
     conquering_powiat_value = conquering_powiat_row['value'].iloc[0]
     conquering_powiat_geometry = conquering_powiat_row['geometry'].iloc[0]
+    conquering_powiat_name = conquering_powiat_row['name'].iloc[0].lstrip('miasto ')
 
     all_rows_for_conquering_powiat = powiaty[powiaty['belongs_to'] == conquering_powiat_code]
     neighbours = []
@@ -52,23 +53,15 @@ def play_turn():
     powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
     powiat_to_conquer_geometry = powiat_to_conquer_row['powiat_shape'].iloc[0]
     powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
-
-    conquering_powiat_name = conquering_powiat_row['name'].iloc[0].lstrip('miasto ')
     powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0].lstrip('miasto ')
-
-    #merge geometry for conquering powiat
-    all_rows_for_conquering_powiat = all_rows_for_conquering_powiat.set_geometry('powiat_shape')
-    conquering_powiat_geometry = all_rows_for_conquering_powiat.geometry.unary_union
-    conquering_powiat_row['geometry'].iloc[0] = conquering_powiat_geometry
 
     #find row for conquered powiat owner
     powiat_to_conquer_owner_row = powiaty[powiaty['code'] == powiat_to_conquer_owner_code]
     powiat_to_conquer_owner_name = powiat_to_conquer_owner_row['name'].iloc[0].lstrip('miasto ')
     powiat_to_conquer_owner_value = powiat_to_conquer_owner_row['value'].iloc[0]
 
-    #update values for conquered powiat
+    #update value for conquered powiat
     powiaty['belongs_to'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_code
-    powiaty['value'][powiaty['code'] == powiat_to_conquer_code] = conquering_powiat_value
 
     if (powiat_to_conquer_code != powiat_to_conquer_owner_code):
         message = '{}, {} conquered {} previously occupied by {}.'.format(message, conquering_powiat_name, powiat_to_conquer_name, powiat_to_conquer_owner_name)
@@ -77,10 +70,10 @@ def play_turn():
         message = '{}, {} conquered {}.'.format(message, conquering_powiat_name, powiat_to_conquer_name)
         log_info(message)
         
-    #find all rows for conquered powiat owner and merge geometry
+    #find all rows for conquered powiat owner and change geometry
     all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_owner_code]
-    all_rows_for_powiat_to_conquer_owner = all_rows_for_powiat_to_conquer_owner.set_geometry('powiat_shape')
-    powiat_to_conquer_owner_geometry = all_rows_for_powiat_to_conquer_owner.geometry.unary_union
+    powiat_to_conquer_owner_geometry = powiat_to_conquer_row['geometry'].iloc[0]
+    powiat_to_conquer_owner_geometry = powiat_to_conquer_owner_geometry.difference(powiat_to_conquer_geometry)
     powiat_to_conquer_row['geometry'].iloc[0] = powiat_to_conquer_geometry
     powiat_to_conquer_owner_row['geometry'].iloc[0] = powiat_to_conquer_owner_geometry
     powiaty['geometry'][powiaty['code'] == powiat_to_conquer_owner_code] = powiat_to_conquer_owner_geometry
@@ -94,6 +87,7 @@ def play_turn():
     info = '{} powiaty left.'.format(powiaty_left)
     message = '{}\n{}'.format(message, info)
     log_info(info)
+
     #=== Plotting both maps ===
 
     cmap = plt.get_cmap('tab20')
@@ -157,20 +151,12 @@ def play_turn():
 
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
     contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
-    plt.savefig('overall-map.png', transparent = True)
-
-    #change few details for the detailed map
-    conquering_text.set_position((conquering_powiat_row.geometry.centroid.x, conquering_powiat_row.geometry.centroid.y))
-    conquering_text.set_fontsize(40)
-    to_conquer_text.set_position((powiat_to_conquer_row.geometry.centroid.x, powiat_to_conquer_row.geometry.centroid.y))
-    to_conquer_text.set_fontsize(40)
-
-    if (not all_rows_for_powiat_to_conquer_owner.empty):
-        to_conquer_owner_text.set_fontsize(40)
+    plt.savefig('overall-map.png', transparent = True)   
 
     #set bbox for detailed map
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
+    adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
     plt.savefig('detail-map.png', transparent = True)
 
     #finally, update geometry for conquering conquered powiat
