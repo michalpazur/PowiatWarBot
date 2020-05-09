@@ -153,7 +153,13 @@ def play_turn():
     contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
     plt.savefig('overall-map.png', transparent = True)   
 
-    #set bbox for detailed map
+    conquering_text.set_position((conquering_powiat_row['geometry'].iloc[0].centroid.x, conquering_powiat_row['geometry'].iloc[0].centroid.y))
+    to_conquer_text.set_position((powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y))
+
+    if (not all_rows_for_powiat_to_conquer_owner.empty):
+        to_conquer_owner_text.set_position((powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y))
+
+    #set bbox for detailed
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
