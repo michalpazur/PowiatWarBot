@@ -125,7 +125,10 @@ def play_turn():
         powiaty_names[row_code] = row_name
 
         if (not powiaty[powiaty['belongs_to'] == row_code].empty):
-            row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.3)
+            row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.4)
+
+    powiaty = powiaty.set_geometry('powiat_shape')
+    powiaty.plot(ax = ax, color = 'none', dashes = ':', edgecolor = 'k', linewidth = 0.3)
 
     conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 3)
     powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = cmap(conquering_powiat_value), hatch = '///')
@@ -168,6 +171,7 @@ def play_turn():
     #finally, update geometry for conquering conquered powiat
     conquering_powiat_geometry = conquering_powiat_geometry.union(powiat_to_conquer_row['powiat_shape'].iloc[0])
     powiaty['geometry'][powiaty['code'] == conquering_powiat_code] = conquering_powiat_geometry
+    powiaty = powiaty.set_geometry('geometry')
     powiaty = powiaty.drop(columns = 'powiat_shape')
     powiaty.to_file('map-data/powiaty.shp', encoding = 'utf-8')
 
