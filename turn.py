@@ -130,7 +130,7 @@ def play_turn():
     powiaty = powiaty.set_geometry('powiat_shape')
     powiaty.plot(ax = ax, color = 'none', dashes = ':', edgecolor = 'k', linewidth = 0.3)
 
-    conquering_powiat_row.plot(ax = ax, color = cmap(conquering_powiat_value), edgecolor = 'green', linewidth = 3)
+    conquering_powiat_row.plot(ax = ax, color = 'none', edgecolor = 'green', linewidth = 3)
     powiat_to_conquer_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = cmap(conquering_powiat_value), hatch = '///')
     powiat_to_conquer_row.plot(ax = ax, color = 'none', edgecolor = 'red', linewidth = 3)
 
@@ -144,7 +144,7 @@ def play_turn():
     texts.append(to_conquer_text)
 
     if (not all_rows_for_powiat_to_conquer_owner.empty):
-        powiat_to_conquer_owner_row.plot(ax = ax, color = cmap(powiat_to_conquer_owner_value), edgecolor = 'blue', linewidth = 3)
+        powiat_to_conquer_owner_row.plot(ax = ax, color = 'none', edgecolor = 'blue', linewidth = 3)
         to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
         to_conquer_owner_text.set_color('#788CFF')
         texts.append(to_conquer_owner_text)
