@@ -17,6 +17,15 @@ def play_turn():
     powiaty = powiaty.rename(columns = {'code_x': 'code', 'geometry_x': 'geometry', 'geometry_y': 'powiat_shape'})
     powiaty = powiaty.set_geometry('geometry')
 
+    for index, row in powiaty.iterrows():
+        all_rows_for_powiat = powiaty[powiaty['belongs_to'] == row['code']]
+        if (all_rows_for_powiat.empty):
+            powiaty['geometry'][powiaty['code'] == row['code']] = None
+        else:
+            all_rows_for_powiat = all_rows_for_powiat.set_geometry('powiat_shape')
+            row_geometry = all_rows_for_powiat.unary_union
+            powiaty['geometry'][powiaty['code'] == row['code']] = row_geometry
+
     with open('map-data/status.txt', 'r') as f:
         powiaty_left = int(f.readline())
         last_powiat = f.readline().rstrip()
@@ -72,7 +81,7 @@ def play_turn():
         
     #find all rows for conquered powiat owner and change geometry
     all_rows_for_powiat_to_conquer_owner = powiaty[powiaty['belongs_to'] == powiat_to_conquer_owner_code]
-    powiat_to_conquer_owner_geometry = powiat_to_conquer_row['geometry'].iloc[0]
+    powiat_to_conquer_owner_geometry = powiat_to_conquer_owner_row['geometry'].iloc[0]
     powiat_to_conquer_owner_geometry = powiat_to_conquer_owner_geometry.difference(powiat_to_conquer_geometry)
     powiat_to_conquer_row['geometry'].iloc[0] = powiat_to_conquer_geometry
     powiat_to_conquer_owner_row['geometry'].iloc[0] = powiat_to_conquer_owner_geometry
