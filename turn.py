@@ -9,7 +9,7 @@ def play_turn():
     matplotlib.rcParams['hatch.linewidth'] = 3
     pandas.set_option('mode.chained_assignment', None)
 
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'Septemper', 'October', 'November', 'December']
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
     powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
     powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)

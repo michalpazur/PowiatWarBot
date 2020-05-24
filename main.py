@@ -3,6 +3,7 @@ from PIL import Image
 from log import log_info, log_error
 from datetime import datetime
 import facebook as fb
+from export import create_map
 
 i = 0
 log_info('\n')
@@ -60,3 +61,5 @@ while i < 5:
         log_error('An error {} occured, trying again [{}/{}].'.format(e, i, 5))
         if (i == 5):
             quit()
+
+create_map()
