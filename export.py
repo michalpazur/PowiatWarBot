@@ -1,4 +1,4 @@
-import geopandas, json
+import geopandas, pandas, json
 import matplotlib.pyplot as plt
 
 def get_color_str(value):
@@ -33,13 +33,19 @@ def create_map():
         powiaty['belongs_to_name'][powiaty['code'] == row_code] = row_owner_name
         powiaty['value'][powiaty['code'] == row_code] = row_color
     
-    powiaty = powiaty.drop(columns = ['geometry', 'isGOP'])
-    powiaty.crs = {'init': 'epsg:3857'}
-    powiaty = powiaty.to_crs('epsg:4326')
+    powiaty_shapes = powiaty[['name', 'belongs_to_name', 'code', 'belongs_to', 'powiat_shape']]
+    powiaty_shapes = powiaty_shapes.set_geometry('powiat_shape')
+    powiaty_shapes.crs = {'init': 'epsg:3857'}
+    powiaty_shapes = powiaty_shapes.to_crs('epsg:4326')
+    powiaty_shapes.geometry = powiaty_shapes.simplify(0.005)
 
-    powiaty.geometry = powiaty.simplify(0.005)
+    powiaty = powiaty.drop(columns = ['geometry', 'powiat_shape', 'isGOP', 'belongs_to_name'])
+    powiaty = pandas.DataFrame(powiaty)
+    powiaty = powiaty.set_index('code')
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
-        f.write(powiaty.to_json(na = 'null'))
+        f.write(powiaty.to_json(orient = 'index'))
+    with open('map-data/powiaty-shapes.json', 'w', encoding = 'utf-8') as f:
+        f.write(powiaty_shapes.to_json(na = 'null'))
 
     print('Saved powiaty.json!')
 create_map()
