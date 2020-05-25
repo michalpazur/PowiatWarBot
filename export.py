@@ -1,4 +1,4 @@
-import geopandas, pandas, json
+import geopandas, pandas, json, topojson
 import matplotlib.pyplot as plt
 
 def get_color_str(value):
@@ -37,7 +37,7 @@ def create_map():
     powiaty_shapes = powiaty_shapes.set_geometry('powiat_shape')
     powiaty_shapes.crs = {'init': 'epsg:3857'}
     powiaty_shapes = powiaty_shapes.to_crs('epsg:4326')
-    powiaty_shapes.geometry = powiaty_shapes.simplify(0.005)
+    powiaty_shapes.geometry = powiaty_shapes.simplify(0.0002)
 
     powiaty = powiaty.drop(columns = ['geometry', 'powiat_shape', 'isGOP', 'belongs_to_name'])
     powiaty = pandas.DataFrame(powiaty)
@@ -45,7 +45,7 @@ def create_map():
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(orient = 'index'))
     with open('map-data/powiaty-shapes.json', 'w', encoding = 'utf-8') as f:
-        f.write(powiaty_shapes.to_json(na = 'null'))
+        f.write(topojson.Topology(powiaty_shapes, prequantize = False, toposimplify = 0.01).to_json())
 
     print('Saved powiaty.json!')
 create_map()
