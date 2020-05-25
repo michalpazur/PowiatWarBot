@@ -1,4 +1,4 @@
-import folium, geopandas
+import geopandas, json
 import matplotlib.pyplot as plt
 
 def get_color_str(value):
@@ -15,39 +15,31 @@ def get_color_str(value):
 
 def create_map():
 
+    with open('map-data/names.json', 'r', encoding = 'utf-8') as f:
+        names = json.load(f)
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
-    powiaty = powiaty[powiaty.geometry.notnull()]
+    powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
+    powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)
+    powiaty = powiaty.drop(columns = 'code_y')
+    powiaty = powiaty.rename(columns = {'code_x': 'code', 'geometry_x': 'geometry', 'geometry_y': 'powiat_shape'})
+    powiaty = powiaty.set_geometry('powiat_shape')
+    powiaty = powiaty.assign(belongs_to_name = ['']*len(powiaty.index))
+
+    for i, row in powiaty.iterrows():
+        row_code = row['code']
+        row_owner_code = row['belongs_to']
+        row_owner_name = names[row_owner_code]
+        row_color = get_color_str(row['value'])
+        powiaty['belongs_to_name'][powiaty['code'] == row_code] = row_owner_name
+        powiaty['value'][powiaty['code'] == row_code] = row_color
+    
+    powiaty = powiaty.drop(columns = ['geometry', 'isGOP'])
     powiaty.crs = {'init': 'epsg:3857'}
     powiaty = powiaty.to_crs('epsg:4326')
+
     powiaty.geometry = powiaty.simplify(0.005)
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(na = 'null'))
 
     print('Saved powiaty.json!')
-    m = folium.Map(location = [51.850984, 19.462806], zoom_start = 6.3, tiles = 'Stamen Terrain')
-
-    highlight_style = lambda feature: dict(opacity = 1, weight = 4, color = 'limegreen')
-    none_fill_style = lambda feature: dict(weight = 0, fillOpacity = 0)
-    dashed_fill_style = lambda feature: dict(color = 'black', dashArray = '3 15', opacity = 1, fill = None, weight = 1)
-    fill_style = lambda feature: dict(color = 'black', fillColor = get_color_str(feature['properties']['value']), fillOpacity = 1, weight = 1)
-
-    powiaty_base = folium.GeoJson(
-        'map-data/powiaty.json',
-        name = 'powiaty_base',
-        style_function = fill_style
-    ).add_to(m)
-
-    powiaty_borders = folium.GeoJson(
-        'map-data/powiaty-shapes.json',
-        name = 'powiaty_borders',
-        style_function = dashed_fill_style
-    ).add_to(m)
-
-    powiaty_highlight = folium.GeoJson(
-        'map-data/powiaty.json',
-        name = 'powiaty_highlight',
-        style_function = none_fill_style,
-        highlight_function = highlight_style
-    ).add_to(m)
-
-    m.save('map.html')
+create_map()
