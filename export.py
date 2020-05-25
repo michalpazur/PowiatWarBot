@@ -45,7 +45,7 @@ def create_map():
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(orient = 'index'))
     with open('map-data/powiaty-shapes.json', 'w', encoding = 'utf-8') as f:
-        f.write(topojson.Topology(powiaty_shapes, prequantize = False, toposimplify = 0.01).to_json())
-
-    print('Saved powiaty.json!')
-create_map()
+        print('Creating powiaty-shapes.json...')
+        tj = topojson.Topology(powiaty_shapes, prequantize = False, toposimplify = 0.01)
+        print('Created powiaty-shapes.json!')
+        f.write(tj.to_json())
