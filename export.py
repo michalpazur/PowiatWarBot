@@ -17,7 +17,8 @@ def create_map():
 
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
     powiaty = powiaty[powiaty.geometry.notnull()]
-    powiaty = powiaty.to_crs('EPSG:4326')
+    powiaty.crs = {'init': 'epsg:3857'}
+    powiaty = powiaty.to_crs('epsg:4326')
     powiaty.geometry = powiaty.simplify(0.005)
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(na = 'null'))
@@ -28,7 +29,7 @@ def create_map():
     highlight_style = lambda feature: dict(opacity = 1, weight = 4, color = 'limegreen')
     none_fill_style = lambda feature: dict(weight = 0, fillOpacity = 0)
     dashed_fill_style = lambda feature: dict(color = 'black', dashArray = '3 15', opacity = 1, fill = None, weight = 1)
-    fill_style = lambda feature: dict(stroke = False, fillColor = get_color_str(feature['properties']['value']), fillOpacity = 1, weight = 1.5)
+    fill_style = lambda feature: dict(color = 'black', fillColor = get_color_str(feature['properties']['value']), fillOpacity = 1, weight = 1)
 
     powiaty_base = folium.GeoJson(
         'map-data/powiaty.json',
@@ -50,5 +51,3 @@ def create_map():
     ).add_to(m)
 
     m.save('map.html')
-    
-create_map()
