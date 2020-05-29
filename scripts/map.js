@@ -6,10 +6,9 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
 
     function mergedPowiaty(feature, layer)
     {
-        console.log(feature.properties.belongs_to)
         layer.setStyle(
             {
-                className: 'powiat ' + feature.properties.name,
+                className: 'powiat ' + powiatyJson[feature.properties.belongs_to].name,
                 fillColor: powiatyJson[feature.properties.belongs_to].value,
                 fillOpacity: 1,
                 weight: 1,
@@ -20,17 +19,17 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
     {
         layer.setStyle(
             {
-                className: 'territory ' + feature.properties.name,
+                className: 'territory ' + powiatyJson[feature.properties.code].name,
                 dashArray: '3 15',
                 color: 'black',
                 weight: 1,
                 fillOpacity: 0
             })
-        var territoryName = feature.properties.name.replace('miasto', '');
+        var territoryName = powiatyJson[feature.properties.code].name.replace('miasto', '');
         var firstLetter = territoryName.toUpperCase().charAt(0);
         territoryName = territoryName.slice(1);
         territoryName = firstLetter + territoryName;
-        popupContent = "<b>" + territoryName + "</b> occupied by <b>" + feature.properties.belongs_to_name.replace('miasto', '') + "</b>.";
+        popupContent = '<div id = "popup"><b>' + territoryName + "</b> occupied by <b>" + powiatyJson[feature.properties.code].belongs_to_name.replace('miasto', '') + "</b>.</div>";
         layer.bindPopup(popupContent);
     }
     function showHover(newHoverName)
@@ -43,7 +42,7 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
             }
 
             currentHover = newHoverName;
-            var hoverShape = topojson.merge(powiatyTopology, powiatyTopology.objects.data.geometries.filter(function (p) { return p.properties.belongs_to == newHoverName}));
+            var hoverShape = topojson.merge(powiatyTopology, powiatyTopology.objects['powiaty-shapes'].geometries.filter(function (p) { return powiatyJson[p.properties.code].belongs_to == newHoverName}));
             hoverLayer = L.geoJSON(hoverShape, {onEachFeature: countryHover}).addTo(map);
         }
     }
@@ -61,14 +60,14 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
     var stamenMap = new L.StamenTileLayer("terrain");
     map.addLayer(stamenMap);
     
-    d3.json('../map-data/powiaty-shapes.json').then(function(powiatyShapesJson)
+    d3.json('map-data/powiaty-shapes.json').then(function(powiatyShapesJson)
     {
         powiatyTopology = powiatyShapesJson;
-        var powiatyShapes = topojson.feature(powiatyShapesJson, powiatyShapesJson.objects.data);
+        var powiatyShapes = topojson.feature(powiatyShapesJson, powiatyShapesJson.objects['powiaty-shapes']);
 
         for (var obj in powiatyJson)
         {
-            var mergedPowiat = topojson.merge(powiatyShapesJson, powiatyShapesJson.objects.data.geometries.filter(function (p) { return p.properties.belongs_to == obj}));
+            var mergedPowiat = topojson.merge(powiatyShapesJson, powiatyShapesJson.objects['powiaty-shapes'].geometries.filter(function (p) { return powiatyJson[p.properties.code].belongs_to == obj}));
             mergedPowiat.properties = {};
             mergedPowiat.properties.belongs_to = obj;
             L.geoJSON(mergedPowiat, {onEachFeature: mergedPowiaty}).addTo(map);
@@ -77,18 +76,23 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
         var dashedLayer = L.geoJSON(powiatyShapes, {onEachFeature: dashedPowiaty}).addTo(map);
         dashedLayer.on("mousemove", function(event)
         {
-            showHover(event.layer.feature.properties.belongs_to)
+            showHover(powiatyJson[event.layer.feature.properties.code].belongs_to)
         });
 
         dashedLayer.on("touchmove", function(event)
         {
-            showHover(event.layer.feature.properties.belongs_to)
+            showHover(powiatyJson[event.layer.feature.properties.code].belongs_to)
         });
 
         dashedLayer.on("mouseclick", function(event)
         {
-            showHover(event.layer.feature.properties.belongs_to)
-        })
+            showHover(powiatyJson[event.layer.feature.properties.code].belongs_to)
+        });
+
+        dashedLayer.on("tap", function(event)
+        {
+            showHover(powiatyJson[event.layer.feature.properties.code].belongs_to)
+        });
 
         map.fitBounds(dashedLayer.getBounds());
     })

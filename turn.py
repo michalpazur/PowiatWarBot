@@ -94,7 +94,7 @@ def play_turn():
         powiaty_left -= 1
 
     info = '{} powiaty left.'.format(powiaty_left)
-    message = '{}\n{}'.format(message, info)
+    message = '{}\n{}\nCheck the full map at: http://powiatwarbot.xyz/.'.format(message, info)
     log_info(info)
 
     #=== Plotting both maps ===
