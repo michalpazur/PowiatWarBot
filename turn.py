@@ -5,7 +5,9 @@ import matplotlib as matplotlib
 from adjustText import adjust_text
 from log import log_info, log_error
 
-def play_turn():
+powiaty_names = {}
+
+def load_values():
     matplotlib.rcParams['hatch.linewidth'] = 3
     pandas.set_option('mode.chained_assignment', None)
 
@@ -19,12 +21,16 @@ def play_turn():
 
     for index, row in powiaty.iterrows():
         all_rows_for_powiat = powiaty[powiaty['belongs_to'] == row['code']]
+        powiaty_names[row['code']] = row['name'].lstrip('miasto ')
         if (all_rows_for_powiat.empty):
             powiaty['geometry'][powiaty['code'] == row['code']] = None
         else:
             all_rows_for_powiat = all_rows_for_powiat.set_geometry('powiat_shape')
             row_geometry = all_rows_for_powiat.unary_union
             powiaty['geometry'][powiaty['code'] == row['code']] = row_geometry
+
+def play_turn():
+    powiaty = load_values()
 
     with open('map-data/status.txt', 'r') as f:
         powiaty_left = int(f.readline())
@@ -126,12 +132,9 @@ def play_turn():
     for i in range(len(powiaty)):
         row = powiaty.loc[[i],]
         row_code = row['code'].iloc[0]
-        row_name = row['name'].iloc[0].lstrip('miasto ')
         row_belongs_to = row['belongs_to'].iloc[0]
 
-        powiaty_ammount.setdefault(row_belongs_to, 0)
-        powiaty_ammount[row_belongs_to] = powiaty_ammount[row_belongs_to] + 1
-        powiaty_names[row_code] = row_name
+        powiaty_ammount[row_belongs_to] = powiaty_ammount.setdefault(row_belongs_to, 0) + 1
 
         if (not powiaty[powiaty['belongs_to'] == row_code].empty):
             row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.4)

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 def get_color_str(value):
     cmap = plt.get_cmap('tab20')
+    value = (value - 1)/20
     color = cmap(value)
     color_str = '#'
     for value in color[:-1]:
@@ -26,6 +27,7 @@ def create_map():
     powiaty = powiaty.assign(belongs_to_name = ['']*len(powiaty.index))
 
     for i, row in powiaty.iterrows():
+        print(row)
         row_code = row['code']
         row_owner_code = row['belongs_to']
         row_owner_name = names[row_owner_code]
@@ -33,8 +35,10 @@ def create_map():
         powiaty['belongs_to_name'][powiaty['code'] == row_code] = row_owner_name
         powiaty['value'][powiaty['code'] == row_code] = row_color
     
-    powiaty = powiaty.drop(columns = ['geometry', 'powiat_shape', 'isGOP'])
+    powiaty = powiaty.drop(columns = ['geometry', 'powiat_shape'])
     powiaty = pandas.DataFrame(powiaty)
     powiaty = powiaty.set_index('code')
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(orient = 'index'))
+
+create_map()
