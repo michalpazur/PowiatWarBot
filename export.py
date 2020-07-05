@@ -27,7 +27,6 @@ def create_map():
     powiaty = powiaty.assign(belongs_to_name = ['']*len(powiaty.index))
 
     for i, row in powiaty.iterrows():
-        print(row)
         row_code = row['code']
         row_owner_code = row['belongs_to']
         row_owner_name = names[row_owner_code]
@@ -40,5 +39,3 @@ def create_map():
     powiaty = powiaty.set_index('code')
     with open('map-data/powiaty.json', 'w', encoding = 'utf-8') as f:
         f.write(powiaty.to_json(orient = 'index'))
-
-create_map()

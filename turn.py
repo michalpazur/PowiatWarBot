@@ -6,12 +6,12 @@ from adjustText import adjust_text
 from log import log_info, log_error
 
 powiaty_names = {}
+months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+matplotlib.rcParams['hatch.linewidth'] = 3
+pandas.set_option('mode.chained_assignment', None)
 
 def load_values():
-    matplotlib.rcParams['hatch.linewidth'] = 3
-    pandas.set_option('mode.chained_assignment', None)
 
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
     powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
     powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)
@@ -28,8 +28,11 @@ def load_values():
             all_rows_for_powiat = all_rows_for_powiat.set_geometry('powiat_shape')
             row_geometry = all_rows_for_powiat.unary_union
             powiaty['geometry'][powiaty['code'] == row['code']] = row_geometry
+    
+    return powiaty
 
 def play_turn():
+
     powiaty = load_values()
 
     with open('map-data/status.txt', 'r') as f:
@@ -58,13 +61,17 @@ def play_turn():
     conquering_powiat_name = conquering_powiat_row['name'].iloc[0].lstrip('miasto ')
 
     all_rows_for_conquering_powiat = powiaty[powiaty['belongs_to'] == conquering_powiat_code]
-    neighbours = []
-    for index, row in powiaty.iterrows():
-        if (row['belongs_to'] != conquering_powiat_code):
-            if (row['powiat_shape'].touches(conquering_powiat_geometry)):
-                neighbours.append(row['code'])
 
-    powiat_to_conquer_code = random.choice(neighbours)
+    distances = {}
+    for index, row in powiaty.iterrows():
+        if (row.belongs_to != conquering_powiat_code):
+            distances[row.code] = row['powiat_shape'].centroid.distance(conquering_powiat_row['geometry'].iloc[0].centroid)
+
+    dist_list = [(c, d) for c, d in zip(distances.keys(), distances.values())]
+    dist_list = sorted(dist_list, key = lambda x: x[1])
+    neigbours = [dist_list[i][0] for i in range(3)]
+
+    powiat_to_conquer_code = random.choice(neigbours)
     powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
     powiat_to_conquer_geometry = powiat_to_conquer_row['powiat_shape'].iloc[0]
     powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
@@ -137,7 +144,7 @@ def play_turn():
         powiaty_ammount[row_belongs_to] = powiaty_ammount.setdefault(row_belongs_to, 0) + 1
 
         if (not powiaty[powiaty['belongs_to'] == row_code].empty):
-            row.plot(ax = ax, color = cmap(row['value']), edgecolor = 'k', linewidth = 0.4)
+            row.plot(ax = ax, color = cmap((row['value'] - 1)/20), edgecolor = 'k', linewidth = 0.4)
 
     powiaty = powiaty.set_geometry('powiat_shape')
     powiaty.plot(ax = ax, color = 'none', dashes = ':', edgecolor = 'k', linewidth = 0.3)
@@ -165,16 +172,17 @@ def play_turn():
         text.set_path_effects(path_effects)
 
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
-    contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
-    plt.savefig('overall-map.png', transparent = True)   
-
+    #contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
+    plt.savefig('{}.png'.format(date), transparent = True)
+    plt.close(fig)
+    
     conquering_text.set_position((conquering_powiat_row['geometry'].iloc[0].centroid.x, conquering_powiat_row['geometry'].iloc[0].centroid.y))
     to_conquer_text.set_position((powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y))
 
     if (not all_rows_for_powiat_to_conquer_owner.empty):
         to_conquer_owner_text.set_position((powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y))
 
-    #set bbox for detailed
+    #set bbox for detailed map
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
