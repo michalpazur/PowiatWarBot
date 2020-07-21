@@ -69,7 +69,7 @@ def play_turn():
 
     dist_list = [(c, d) for c, d in zip(distances.keys(), distances.values())]
     dist_list = sorted(dist_list, key = lambda x: x[1])
-    neigbours = [dist_list[i][0] for i in range(3)]
+    neigbours = [dist_list[i][0] for i in range(3)] #TODO: Fix IndexError
 
     powiat_to_conquer_code = random.choice(neigbours)
     powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
@@ -175,7 +175,7 @@ def play_turn():
     #contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
     plt.savefig('{}.png'.format(date), transparent = True)
     plt.close(fig)
-    
+
     conquering_text.set_position((conquering_powiat_row['geometry'].iloc[0].centroid.x, conquering_powiat_row['geometry'].iloc[0].centroid.y))
     to_conquer_text.set_position((powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y))
 
