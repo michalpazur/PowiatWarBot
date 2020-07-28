@@ -4,6 +4,7 @@ from log import log_info, log_error
 from datetime import datetime
 import facebook as fb
 from export import create_map
+import json
 
 i = 0
 log_info('\n')
@@ -43,6 +44,9 @@ while i < 5:
         log_info('Post was created at {} with id {}'.format(datetime.now(), post_id))
         image_response = facebook.put_photo(image = open('detail-map.png', 'rb'), no_story = True, published = False)
         photo_id = image_response['id']
+
+        with open('map-data/names.json', encoding='utf-8') as f:
+            powiaty_names = json.load(f)
 
         items_to_sort = [(v, k) for (k, v) in zip(powiaty_ammount.keys(), powiaty_ammount.values())]
         items_to_sort.sort(reverse = True)
