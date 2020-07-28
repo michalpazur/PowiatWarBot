@@ -47,7 +47,11 @@ while i < 5:
         items_to_sort = [(v, k) for (k, v) in zip(powiaty_ammount.keys(), powiaty_ammount.values())]
         items_to_sort.sort(reverse = True)
         message = 'Top 10 powiaty by number of controlled territories:'
-        for j in range(10): 
+        if (len(items_to_sort) > 10) :
+            range_len = 10
+        else:
+            range_len = len(items_to_sort)
+        for j in range(range_len): 
             powiat_name = powiaty_names[items_to_sort[j][1]]
             message = '{}\n{}: {}'.format(message, powiat_name, items_to_sort[j][0])
 
