@@ -142,7 +142,6 @@ def play_turn():
     ax.set_axis_off()
     ax.set_aspect('equal')
     powiaty_ammount = {}
-    powiaty_names = {}
 
     #every powiat has to be plotted separately, otherwise it would have a color from a normalized color map
     for i in range(len(powiaty)):
@@ -183,7 +182,6 @@ def play_turn():
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
     contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
     plt.savefig('overall-map.png', transparent = True)
-    plt.close(fig)
 
     conquering_text.set_position((conquering_powiat_row['geometry'].iloc[0].centroid.x, conquering_powiat_row['geometry'].iloc[0].centroid.y))
     to_conquer_text.set_position((powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y))
@@ -209,4 +207,4 @@ def play_turn():
         f.write('{}\n'.format(conquering_powiat_code))
         f.write(str(date + 1))
 
-    return message, powiaty_left, powiaty_ammount, powiaty_names
+    return message, powiaty_left, powiaty_ammount

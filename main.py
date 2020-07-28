@@ -7,7 +7,7 @@ from export import create_map
 import json
 
 i = 0
-log_info('\n')
+log_info('')
 while i < 5:
     try:
         post_message, powiaty_left, powiaty_ammount, powiaty_names = play_turn()
