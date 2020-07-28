@@ -69,17 +69,21 @@ def play_turn():
 
     dist_list = [(c, d) for c, d in zip(distances.keys(), distances.values())]
     dist_list = sorted(dist_list, key = lambda x: x[1])
-    neigbours = [dist_list[i][0] for i in range(3)] #TODO: Fix IndexError
+    if len(dist_list) > 3: 
+        range_len = 3
+    else:
+        range_len = len(dist_list)
+    neigbours = [dist_list[i][0] for i in range(range_len)]
 
     powiat_to_conquer_code = random.choice(neigbours)
     powiat_to_conquer_row = powiaty[powiaty['code'] == powiat_to_conquer_code]
     powiat_to_conquer_geometry = powiat_to_conquer_row['powiat_shape'].iloc[0]
     powiat_to_conquer_owner_code = powiat_to_conquer_row['belongs_to'].iloc[0]
-    powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0].lstrip('miasto ')
+    powiat_to_conquer_name = powiat_to_conquer_row['name'].iloc[0]
 
     #find row for conquered powiat owner
     powiat_to_conquer_owner_row = powiaty[powiaty['code'] == powiat_to_conquer_owner_code]
-    powiat_to_conquer_owner_name = powiat_to_conquer_owner_row['name'].iloc[0].lstrip('miasto ')
+    powiat_to_conquer_owner_name = powiat_to_conquer_owner_row['name'].iloc[0]
     powiat_to_conquer_owner_value = powiat_to_conquer_owner_row['value'].iloc[0]
 
     #update value for conquered powiat
@@ -106,7 +110,12 @@ def play_turn():
         log_info(info)
         powiaty_left -= 1
 
-    info = '{} powiaty left.'.format(powiaty_left)
+    if (powiaty_left > 1):
+        info = '{} powiaty left.'.format(powiaty_left)
+    else:
+        capitalized_name = conquering_powiat_name[0].capitalize() + conquering_powiat_name[1:]
+        info = '{} now rules over Poland. Niech żyje {}!'.format(capitalized_name, conquering_powiat_name)
+
     message = '{}\n{}\nCheck the full map at: http://powiatwarbot.xyz/.'.format(message, info)
     log_info(info)
 
@@ -172,8 +181,8 @@ def play_turn():
         text.set_path_effects(path_effects)
 
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
-    #contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
-    plt.savefig('{}.png'.format(date), transparent = True)
+    contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
+    plt.savefig('overall-map.png', transparent = True)
     plt.close(fig)
 
     conquering_text.set_position((conquering_powiat_row['geometry'].iloc[0].centroid.x, conquering_powiat_row['geometry'].iloc[0].centroid.y))
