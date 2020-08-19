@@ -4,6 +4,7 @@ from log import log_info, log_error
 from datetime import datetime
 import facebook as fb
 from export import create_map
+import discord_bot as discord
 
 i = 0
 log_info('\n')
@@ -37,6 +38,7 @@ while i < 5:
 
             facebook = fb.GraphAPI(access_token = api_key)
             post_response = facebook.put_photo(image = open('overall-map.png', 'rb'), message = post_message)
+            discord.SendMessageToAll(post_message, open('overall-map.png', 'rb'))
 
         was_posted = True
         post_id = post_response['post_id']
@@ -47,7 +49,7 @@ while i < 5:
         items_to_sort = [(v, k) for (k, v) in zip(powiaty_ammount.keys(), powiaty_ammount.values())]
         items_to_sort.sort(reverse = True)
         message = 'Top 10 powiaty by number of controlled territories:'
-        for j in range(10): 
+        for j in range(10):
             powiat_name = powiaty_names[items_to_sort[j][1]]
             message = '{}\n{}: {}'.format(message, powiat_name, items_to_sort[j][0])
 
