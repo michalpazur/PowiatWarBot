@@ -4,12 +4,13 @@ from log import log_info, log_error
 from datetime import datetime
 import facebook as fb
 from export import create_map
+from select_turn_type import select_turn_type
+import json
 
 i = 0
-log_info('\n')
 while i < 5:
     try:
-        post_message, powiaty_left, powiaty_ammount, powiaty_names = play_turn()
+        post_message, powiaty_left, powiaty_ammount = select_turn_type()
         i = 10
     except Exception as e:
         i += 1
@@ -44,10 +45,19 @@ while i < 5:
         image_response = facebook.put_photo(image = open('detail-map.png', 'rb'), no_story = True, published = False)
         photo_id = image_response['id']
 
+        with open('map-data/names.json', encoding='utf-8') as f:
+            powiaty_names = json.load(f)
+
         items_to_sort = [(v, k) for (k, v) in zip(powiaty_ammount.keys(), powiaty_ammount.values())]
         items_to_sort.sort(reverse = True)
-        message = 'Top 10 powiaty by number of controlled territories:'
-        for j in range(10): 
+        
+        if (len(items_to_sort) > 10) :
+            range_len = 10
+        else:
+            range_len = len(items_to_sort)
+        
+        message = 'Top {} powiaty by number of controlled territories:'.format(range_len)
+        for j in range(range_len): 
             powiat_name = powiaty_names[items_to_sort[j][1]]
             message = '{}\n{}: {}'.format(message, powiat_name, items_to_sort[j][0])
 
@@ -55,6 +65,9 @@ while i < 5:
         comment_id = comment_response['id']
         facebook.put_comment(comment_id, 'prawmapopodobnie')
 
+        with open('map-data/status.txt', 'a') as f:
+            f.write('{}'.format(items_to_sort[0][1]))
+            
         i = 10
     except Exception as e:
         i += 1

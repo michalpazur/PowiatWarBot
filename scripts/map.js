@@ -25,7 +25,7 @@ d3.json('../map-data/powiaty.json').then(function(powiatyJson)
                 weight: 1,
                 fillOpacity: 0
             })
-        var territoryName = powiatyJson[feature.properties.code].name.replace('miasto', '');
+        var territoryName = powiatyJson[feature.properties.code].name.replace('miasto ', '');
         var firstLetter = territoryName.toUpperCase().charAt(0);
         territoryName = territoryName.slice(1);
         territoryName = firstLetter + territoryName;
