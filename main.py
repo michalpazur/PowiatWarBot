@@ -6,6 +6,7 @@ import facebook as fb
 from export import create_map
 from select_turn_type import select_turn_type
 import json
+import twitter
 
 i = 0
 while i < 5:
@@ -34,10 +35,16 @@ while i < 5:
             image.save('detail-map.png')
 
             with open('api-key.txt', 'r') as f:
-                api_key = f.readline()
+                api_key = f.readline().rstrip()
+                consumer_key = f.readline().rstrip()
+                consumer_secret = f.readline().rstrip()
+                access_token = f.readline().rstrip()
+                access_token_secret = f.readline().rstrip()
 
             facebook = fb.GraphAPI(access_token = api_key)
+            twitter_api = twitter.Api(consumer_key, consumer_secret, access_token, access_token_secret)
             post_response = facebook.put_photo(image = open('overall-map.png', 'rb'), message = post_message)
+            twitter_post_respone = twitter_api.PostUpdate(post_message, media=open('overall-map.png', 'rb'))
 
         was_posted = True
         post_id = post_response['post_id']
