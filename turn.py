@@ -10,11 +10,6 @@ months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'Augus
 matplotlib.rcParams['hatch.linewidth'] = 3
 pandas.set_option('mode.chained_assignment', None)
 
-def get_conquer_chance(powiaty_left):
-    for key in conquer_chance:
-        if (powiaty_left > conquer_chance[key]):
-            return conquer_chance[key]
-
 def load_values():
 
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
@@ -146,14 +141,9 @@ def play_turn(turn_type):
     conquering_powiat_row = conquering_powiat_row.set_geometry('geometry')
 
     #get bbox for the detailed map
-    conquering_powiat_row.plot(ax = ax)
-    powiat_to_conquer_row.plot(ax = ax)
-    if (not all_rows_for_powiat_to_conquer_owner.empty):
-        powiat_to_conquer_owner_row.plot(ax = ax)
-
-    x_limit = ax.get_xlim()
-    y_limit = ax.get_ylim()
-    ax.clear()
+    powiat_to_conquer_centroid = powiat_to_conquer_row['powiat_shape'].iloc[0].centroid
+    x_limit = (powiat_to_conquer_centroid.x - 70000, powiat_to_conquer_centroid.x + 70000)
+    y_limit = (powiat_to_conquer_centroid.y - 70000, powiat_to_conquer_centroid.y + 70000)
     ax.set_axis_off()
     ax.set_aspect('equal')
     powiaty_ammount = {}
@@ -177,8 +167,8 @@ def play_turn(turn_type):
     powiat_to_conquer_row.plot(ax = ax, color = 'none', edgecolor = 'red', linewidth = 3)
 
     #draw text
-    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row['geometry'].iloc[0].centroid.x, y = conquering_powiat_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
-    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, y = powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y, fontdict = font_dict)
+    conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row['geometry'].iloc[0].centroid.x, y = conquering_powiat_row['geometry'].iloc[0].centroid.y, fontdict = font_dict, clip_on=True)
+    to_conquer_text = plt.text(s = powiat_to_conquer_name, x = powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.x, y = powiat_to_conquer_row['powiat_shape'].iloc[0].centroid.y, fontdict = font_dict, clip_on=True)
 
     conquering_text.set_color('#9DFF9C')
     texts.append(conquering_text)
@@ -187,7 +177,7 @@ def play_turn(turn_type):
 
     if (not all_rows_for_powiat_to_conquer_owner.empty):
         powiat_to_conquer_owner_row.plot(ax = ax, color = 'none', edgecolor = 'blue', linewidth = 3)
-        to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y, fontdict = font_dict)
+        to_conquer_owner_text = plt.text(s = powiat_to_conquer_owner_name, x = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.x, y = powiat_to_conquer_owner_row['geometry'].iloc[0].centroid.y, fontdict = font_dict, clip_on=True)
         to_conquer_owner_text.set_color('#788CFF')
         texts.append(to_conquer_owner_text)
 
@@ -208,7 +198,6 @@ def play_turn(turn_type):
     #set bbox for detailed map
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
-    adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
     plt.savefig('detail-map.png', transparent = True)
 
     #finally, update geometry for conquering conquered powiat

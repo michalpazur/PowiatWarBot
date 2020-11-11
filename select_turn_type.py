@@ -11,7 +11,7 @@ def load_values():
 
 def get_last_powiat_value(powiaty_left):
     x = 337 - powiaty_left
-    return ((3.5 * 10**-6) * x**2) + 0.1
+    return ((3.5 * 10**-6) * x**2) + 0.125
 
 def get_biggest_powiat_value(powiaty_left):
     x = 337 - powiaty_left
@@ -24,17 +24,12 @@ def select_turn_type():
         return play_turn('regular')
 
     if (random.random() < 1/150):
-        print('===INDEPENDENCE===')
+        print('[INFO] Playing independence round.')
         return play_independence_turn()
 
     random_val = random.random()
-    """
-    if (random_val < get_biggest_powiat_value(powiaty_left)):
-        print('===BIGGEST => RANDOM: {} => {}==='.format(random_val, get_biggest_powiat_value(powiaty_left)))
-        return play_turn('biggest')
-    """
     if (random_val < get_last_powiat_value(powiaty_left)):
-        print('===LAST => RANDOM: {} => {}==='.format(random_val, get_last_powiat_value(powiaty_left)))
+        print('[INFO] Powiat conquering previously will be conquering.')
         return play_turn('last')
 
     return play_turn('regular')
