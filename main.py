@@ -19,21 +19,25 @@ while i < 5:
         if (i == 5):
             quit()
 
+basemap = Image.open("basemap.png")
+shadow = Image.open("shadow.png")
+poland = Image.open("overall-map.png")
+basemap = Image.alpha_composite(basemap, shadow)
+basemap = Image.alpha_composite(basemap, poland)
+basemap = basemap.crop(basemap.convert("RGBa").getbbox())
+basemap.save("map.png")
+
+image = Image.open('detail-map.png')
+bbox = image.convert('RGBa').getbbox()
+image = image.crop(bbox)
+image.save('detail-map.png')
+
 i = 0
 while i < 5:
     try:
         was_posted = False
 
         if (not was_posted):
-            image = Image.open('overall-map.png')
-            bbox = image.convert('RGBa').getbbox()
-            image = image.crop(bbox)
-            image.save('overall-map.png')
-            image = Image.open('detail-map.png')
-            bbox = image.convert('RGBa').getbbox()
-            image = image.crop(bbox)
-            image.save('detail-map.png')
-
             with open('api-key.txt', 'r') as f:
                 api_key = f.readline().rstrip()
                 consumer_key = f.readline().rstrip()
@@ -43,8 +47,8 @@ while i < 5:
 
             facebook = fb.GraphAPI(access_token = api_key)
             twitter_api = twitter.Api(consumer_key, consumer_secret, access_token, access_token_secret)
-            post_response = facebook.put_photo(image = open('overall-map.png', 'rb'), message = post_message)
-            twitter_post_respone = twitter_api.PostUpdate(post_message, media=open('overall-map.png', 'rb'))
+            post_response = facebook.put_photo(image = open('map.png', 'rb'), message = post_message)
+            twitter_post_respone = twitter_api.PostUpdate(post_message, media=open('map.png', 'rb'))
 
         was_posted = True
         post_id = post_response['post_id']

@@ -29,11 +29,18 @@ def load_values():
             row_geometry = all_rows_for_powiat.unary_union
             powiaty['geometry'][powiaty['code'] == row['code']] = row_geometry
     
-    return powiaty
+    mapbox = ""
+    with open("api-key.txt", "r") as f:
+        for i in range(6):
+            line = f.readline()
+            if i != 5:
+                continue
+            mapbox = line.strip()
+
+    return powiaty, mapbox
 
 def play_independence_turn():
-
-    powiaty = load_values()
+    powiaty, mapbox = load_values()
 
     with open('map-data/status.txt', 'r') as f:
         powiaty_left = int(f.readline())
@@ -96,8 +103,8 @@ def play_independence_turn():
     #=== Plotting both maps ===
 
     cmap = plt.get_cmap('tab20')
-    font_dict = {'fontfamily': 'Arial', 'fontsize': 32, 'fontweight': 'bold'}
-    path_effects = [patheffects.Stroke(linewidth=4, foreground='black'), patheffects.Normal()]
+    font_dict = {'fontfamily': 'Arial', 'fontsize': 24, "fontweight": "bold"}
+    path_effects = [patheffects.Stroke(linewidth=3, foreground='black'), patheffects.Normal()]
     texts = []
     fig, ax = plt.subplots(figsize = (20,20))
     conquering_powiat_owner_row = conquering_powiat_owner_row.set_geometry('geometry')
@@ -133,7 +140,7 @@ def play_independence_turn():
         to_conquer_owner_text.set_color('#7a7a7a')
         texts.append(to_conquer_owner_text)
 
-    conquering_powiat_row.plot(ax = ax, color = cmap((conquering_powiat_value - 1)/20), edgecolor = 'green', linewidth = 3)
+    conquering_powiat_row.plot(ax = ax, color = cmap((conquering_powiat_value - 1)/20), edgecolor = '#73e600', linewidth = 3)
     conquering_text = plt.text(s = conquering_powiat_name, x = conquering_powiat_row['geometry'].iloc[0].centroid.x, y = conquering_powiat_row['geometry'].iloc[0].centroid.y, fontdict = font_dict, clip_on=True)
     conquering_text.set_color('#9DFF9C')
     texts.append(conquering_text)
@@ -142,7 +149,6 @@ def play_independence_turn():
         text.set_path_effects(path_effects)
 
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
-    contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
     plt.savefig('maps/{}.png'.format(date), transparent = True)
     plt.savefig('overall-map.png', transparent = True)
     
@@ -154,6 +160,8 @@ def play_independence_turn():
     #set bbox for detailed map
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
+
+    contextily.add_basemap(ax, zoom=10, source="https://api.mapbox.com/styles/v1/kolorowytoster/ckn0rhk6b1er317pe7kg5jkgl/tiles/256/{z}/{x}/{y}@2x?access_token=" + mapbox)
     plt.savefig('detail-map.png', transparent = True)
     
     #finally, update geometry for conquering conquered powiat

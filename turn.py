@@ -11,7 +11,6 @@ matplotlib.rcParams['hatch.linewidth'] = 3
 pandas.set_option('mode.chained_assignment', None)
 
 def load_values():
-
     powiaty = geopandas.read_file('map-data/powiaty.shp', encoding = 'utf-8')
     powiaty_shapes = geopandas.read_file('map-data/powiaty-shapes.shp', encoding = 'utf-8')
     powiaty = powiaty.merge(powiaty_shapes, how = 'left', left_index = True, right_index = True)
@@ -29,11 +28,18 @@ def load_values():
             row_geometry = all_rows_for_powiat.unary_union
             powiaty['geometry'][powiaty['code'] == row['code']] = row_geometry
     
-    return powiaty
+    mapbox = ""
+    with open("api-key.txt", "r") as f:
+        for i in range(6):
+            line = f.readline()
+            if i != 5:
+                continue
+            mapbox = line.strip()
+
+    return powiaty, mapbox
 
 def play_turn(turn_type):
-
-    powiaty = load_values()
+    powiaty, mapbox = load_values()
 
     with open('map-data/status.txt', 'r') as f:
         powiaty_left = int(f.readline())
@@ -132,8 +138,8 @@ def play_turn(turn_type):
     #=== Plotting both maps ===
 
     cmap = plt.get_cmap('tab20')
-    font_dict = {'fontfamily': 'Arial', 'fontsize': 32, 'fontweight': 'bold'}
-    path_effects = [patheffects.Stroke(linewidth=4, foreground='black'), patheffects.Normal()]
+    font_dict = {'fontfamily': 'Arial', 'fontsize': 24, "fontweight": "bold"}
+    path_effects = [patheffects.Stroke(linewidth=3, foreground='black'), patheffects.Normal()]
     texts = []
     fig, ax = plt.subplots(figsize = (20,20))
     powiat_to_conquer = powiat_to_conquer_row.set_geometry('powiat_shape')
@@ -162,7 +168,7 @@ def play_turn(turn_type):
     powiaty = powiaty.set_geometry('powiat_shape')
     powiaty.plot(ax = ax, color = 'none', dashes = ':', edgecolor = 'k', linewidth = 0.3)
 
-    conquering_powiat_row.plot(ax = ax, color = 'none', edgecolor = 'green', linewidth = 3)
+    conquering_powiat_row.plot(ax = ax, color = 'none', edgecolor = '#73e600', linewidth = 3)
     powiat_to_conquer_row.plot(ax = ax, color = cmap((powiat_to_conquer_owner_value - 1)/20), edgecolor = cmap((conquering_powiat_value - 1)/20), hatch = '///')
     powiat_to_conquer_row.plot(ax = ax, color = 'none', edgecolor = 'red', linewidth = 3)
 
@@ -185,7 +191,6 @@ def play_turn(turn_type):
         text.set_path_effects(path_effects)
 
     adjust_text(texts, only_move = {'points': 'y', 'texts': 'y'}, va = 'center', autoalign = 'y')
-    contextily.add_basemap(ax, source = contextily.sources.ST_TERRAIN_BACKGROUND, zoom = 8)
     plt.savefig('overall-map.png', transparent = True)
     plt.savefig('maps/{}.png'.format(date), transparent = True)
  
@@ -198,6 +203,8 @@ def play_turn(turn_type):
     #set bbox for detailed map
     ax.set_xlim(x_limit)
     ax.set_ylim(y_limit)
+    
+    contextily.add_basemap(ax, zoom=10, source="https://api.mapbox.com/styles/v1/kolorowytoster/ckn0rhk6b1er317pe7kg5jkgl/tiles/256/{z}/{x}/{y}@2x?access_token=" + mapbox)
     plt.savefig('detail-map.png', transparent = True)
 
     #finally, update geometry for conquering conquered powiat
