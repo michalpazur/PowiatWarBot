@@ -75,6 +75,7 @@ while i < 5:
         comment_response = facebook.put_object(parent_object = post_id, message = message, connection_name = 'comments', attachment_id = photo_id)
         comment_id = comment_response['id']
         facebook.put_comment(comment_id, 'prawmapopodobnie')
+        facebook.put_comment(post_id, "Also check out the Twitter version of the bot: https://twitter.com/powiatwarbot")
 
         with open('map-data/status.txt', 'a') as f:
             f.write('{}'.format(items_to_sort[0][1]))
