@@ -1,4 +1,4 @@
-import json, geopandas, pandas, random, contextily, re
+import json, geopandas, pandas, random, contextily, os, re
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as patheffects
 import matplotlib as matplotlib
@@ -138,7 +138,7 @@ def play_turn(turn_type):
     #=== Plotting both maps ===
 
     cmap = plt.get_cmap('tab20')
-    font_dict = {'fontfamily': 'Arial', 'fontsize': 24, "fontweight": "bold"}
+    font_dict = {"fontfamily": "ARIAL" if os.name == "posix" else "arial", 'fontsize': 24, "fontweight": "bold"}
     path_effects = [patheffects.Stroke(linewidth=3, foreground='black'), patheffects.Normal()]
     texts = []
     fig, ax = plt.subplots(figsize = (20,20))
